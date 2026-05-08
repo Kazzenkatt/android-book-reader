@@ -12,14 +12,14 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.design.internal.NavigationMenuItemView;
-import android.support.design.widget.NavigationView;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.MenuItemCompat;
-import android.support.v7.app.AlertDialog;
+import androidx.annotation.NonNull;
+import com.google.android.material.internal.NavigationMenuItemView;
+import com.google.android.material.navigation.NavigationView;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.core.view.MenuItemCompat;
+import androidx.appcompat.app.AlertDialog;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -41,7 +41,7 @@ import com.github.axet.androidlibrary.widgets.OpenFileDialog;
 import com.github.axet.androidlibrary.widgets.SearchView;
 import com.github.axet.androidlibrary.widgets.ThemeUtils;
 import com.github.axet.androidlibrary.widgets.WebViewCustom;
-import com.github.axet.bookreader.R;
+import com.github.axet.bookreader2.R;
 import com.github.axet.bookreader.app.BookApplication;
 import com.github.axet.bookreader.app.Storage;
 import com.github.axet.bookreader.fragments.LibraryFragment;
@@ -204,7 +204,7 @@ public class MainActivity extends FullscreenActivity implements NavigationView.O
         super.onCreate(savedInstanceState);
         storage = new Storage(this);
 
-        registerReceiver(receiver, new IntentFilter(FBReaderView.ACTION_MENU));
+        registerReceiver(receiver, new IntentFilter(FBReaderView.ACTION_MENU), Context.RECEIVER_NOT_EXPORTED);
 
         if (savedInstanceState == null && getIntent().getParcelableExtra(SAVE_INSTANCE_STATE) == null) {
             openLibrary();
@@ -245,14 +245,14 @@ public class MainActivity extends FullscreenActivity implements NavigationView.O
         final SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
         MenuItem theme = menu.findItem(R.id.action_theme);
         String t = shared.getString(BookApplication.PREFERENCE_THEME, "");
-        if (t.equals(getString(R.string.Theme_System))) {
+        if (t.equals(getString(com.github.axet.androidlibrary.R.string.Theme_System))) {
             theme.setVisible(false);
         } else {
             theme.setVisible(true);
-            String d = getString(R.string.Theme_Dark);
+            String d = getString(com.github.axet.androidlibrary.R.string.Theme_Dark);
             theme.setIcon(t.equals(d) ? R.drawable.ic_brightness_night_white_24dp : R.drawable.ic_brightness_day_white_24dp);
-            ResourcesMap map = new ResourcesMap(this, R.array.themes_values, R.array.themes_text);
-            theme.setTitle(map.get(getString(t.equals(d) ? R.string.Theme_Dark : R.string.Theme_Light)));
+            ResourcesMap map = new ResourcesMap(this, com.github.axet.androidlibrary.R.array.themes_values, com.github.axet.androidlibrary.R.array.themes_text);
+            theme.setTitle(map.get(getString(t.equals(d) ? com.github.axet.androidlibrary.R.string.Theme_Dark : com.github.axet.androidlibrary.R.string.Theme_Light)));
         }
 
         final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchMenu);
@@ -365,8 +365,8 @@ public class MainActivity extends FullscreenActivity implements NavigationView.O
         if (id == R.id.action_theme) {
             SharedPreferences.Editor edit = shared.edit();
             String t = shared.getString(BookApplication.PREFERENCE_THEME, "");
-            String d = getString(R.string.Theme_Dark);
-            edit.putString(BookApplication.PREFERENCE_THEME, t.equals(d) ? getString(R.string.Theme_Light) : d);
+            String d = getString(com.github.axet.androidlibrary.R.string.Theme_Dark);
+            edit.putString(BookApplication.PREFERENCE_THEME, t.equals(d) ? getString(com.github.axet.androidlibrary.R.string.Theme_Light) : d);
             edit.commit();
             restartActivity();
             return true;

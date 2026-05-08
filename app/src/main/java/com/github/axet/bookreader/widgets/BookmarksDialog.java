@@ -5,8 +5,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.PopupMenu;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.PopupMenu;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -20,7 +20,7 @@ import com.github.axet.androidlibrary.preferences.OptimizationPreferenceCompat;
 import com.github.axet.androidlibrary.widgets.TextMax;
 import com.github.axet.androidlibrary.widgets.TreeListView;
 import com.github.axet.androidlibrary.widgets.TreeRecyclerView;
-import com.github.axet.bookreader.R;
+import com.github.axet.bookreader2.R;
 import com.github.axet.bookreader.app.Storage;
 
 import java.util.ArrayList;
@@ -150,7 +150,7 @@ public class BookmarksDialog extends AlertDialog.Builder { // bookmarks list dia
                             } else if (id == R.id.action_delete) {
                                 AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                                 builder.setTitle(R.string.delete_bookmark);
-                                builder.setMessage(R.string.are_you_sure);
+                                builder.setMessage(com.github.axet.androidlibrary.R.string.are_you_sure);
                                 builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {

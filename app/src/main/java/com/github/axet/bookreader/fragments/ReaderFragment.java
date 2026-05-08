@@ -15,10 +15,10 @@ import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.support.v4.app.Fragment;
-import android.support.v4.view.MenuItemCompat;
-import android.support.v4.view.ViewCompat;
-import android.support.v7.app.AlertDialog;
+import androidx.fragment.app.Fragment;
+import androidx.core.view.MenuItemCompat;
+import androidx.core.view.ViewCompat;
+import androidx.appcompat.app.AlertDialog;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -38,8 +38,8 @@ import com.github.axet.androidlibrary.widgets.PopupWindowCompat;
 import com.github.axet.androidlibrary.widgets.ThemeUtils;
 import com.github.axet.androidlibrary.widgets.TreeListView;
 import com.github.axet.androidlibrary.widgets.TreeRecyclerView;
-import com.github.axet.bookreader.BuildConfig;
-import com.github.axet.bookreader.R;
+import com.github.axet.bookreader2.BuildConfig;
+import com.github.axet.bookreader2.R;
 import com.github.axet.bookreader.activities.FullscreenActivity;
 import com.github.axet.bookreader.activities.MainActivity;
 import com.github.axet.bookreader.app.BookApplication;
@@ -343,7 +343,7 @@ public class ReaderFragment extends Fragment implements MainActivity.SearchListe
                 fb.invalidateFooter();
             }
         };
-        battery.onReceive(getContext(), getContext().registerReceiver(battery, new IntentFilter(Intent.ACTION_BATTERY_CHANGED)));
+        battery.onReceive(getContext(), getContext().registerReceiver(battery, new IntentFilter(Intent.ACTION_BATTERY_CHANGED), Context.RECEIVER_NOT_EXPORTED));
 
         time.run();
 
@@ -555,7 +555,7 @@ public class ReaderFragment extends Fragment implements MainActivity.SearchListe
             if (v == null || !ViewCompat.isAttachedToWindow(v))
                 v = getOverflowMenuButton(getActivity());
             PopupWindowCompat.showAsTooltip(fontsPopup, v, Gravity.BOTTOM,
-                    ThemeUtils.getThemeColor(getContext(), R.attr.colorButtonNormal), // v has overflow ThemedContext
+                    ThemeUtils.getThemeColor(getContext(), androidx.appcompat.R.attr.colorButtonNormal), // v has overflow ThemedContext
                     ThemeUtils.dp2px(getContext(), 300));
         }
         if (id == R.id.action_rtl) {

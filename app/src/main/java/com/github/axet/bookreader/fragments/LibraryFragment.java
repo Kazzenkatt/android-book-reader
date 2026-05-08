@@ -10,13 +10,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Process;
 import android.preference.PreferenceManager;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.PopupMenu;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.AlertDialog;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.appcompat.widget.PopupMenu;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -40,7 +40,7 @@ import com.github.axet.androidlibrary.widgets.InvalidateOptionsMenuCompat;
 import com.github.axet.androidlibrary.widgets.OpenFileDialog;
 import com.github.axet.androidlibrary.widgets.SearchView;
 import com.github.axet.androidlibrary.widgets.TextMax;
-import com.github.axet.bookreader.R;
+import com.github.axet.bookreader2.R;
 import com.github.axet.bookreader.activities.MainActivity;
 import com.github.axet.bookreader.app.BookApplication;
 import com.github.axet.bookreader.app.Storage;
@@ -97,7 +97,7 @@ public class LibraryFragment extends Fragment implements MainActivity.SearchList
             LayoutInflater inflater = LayoutInflater.from(context);
 
             toolbar = v.findViewById(R.id.search_header_toolbar_parent);
-            searchpanel = v.findViewById(R.id.search_panel);
+            // searchpanel = v.findViewById(R.id.search_panel); // TODO: Resource missing
             searchtoolbar = (LinearLayout) v.findViewById(R.id.search_header_toolbar);
 
             toolbar.setVisibility(View.GONE);
@@ -580,7 +580,7 @@ public class LibraryFragment extends Fragment implements MainActivity.SearchList
                         if (item.getItemId() == R.id.action_delete) {
                             AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                             builder.setTitle(R.string.book_delete);
-                            builder.setMessage(R.string.are_you_sure);
+                            builder.setMessage(com.github.axet.androidlibrary.R.string.are_you_sure);
                             builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {

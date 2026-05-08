@@ -7,7 +7,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.github.axet.androidlibrary.widgets.CacheImagesAdapter;
@@ -185,8 +185,8 @@ public class TTFManager { // .ttf *.otf *.ttc
 
         public String getTtfFontName(File file) {
             int tag = 0;
-            try {
-                m_file = new CacheImagesAdapter.SeekInputStream(new FileInputStream(file));
+            try (FileInputStream fis = new FileInputStream(file)) {
+                m_file = new CacheImagesAdapter.SeekInputStream(fis);
                 tag = readDword();
             } catch (IOException e) {
                 return null;
@@ -227,8 +227,8 @@ public class TTFManager { // .ttf *.otf *.ttc
         }
 
         public String[] getNames(File file) {
-            try {
-                return getNames(new FileInputStream(file));
+            try (FileInputStream fis = new FileInputStream(file)) {
+                return getNames(fis);
             } catch (Exception e) {
                 return null;
             }
@@ -315,8 +315,7 @@ public class TTFManager { // .ttf *.otf *.ttc
                 ContentResolver resolver = context.getContentResolver();
                 ArrayList<Storage.Node> nn = Storage.list(context, uri);
                 for (Storage.Node n : nn) {
-                    try {
-                        InputStream is = resolver.openInputStream(n.uri);
+                    try (InputStream is = resolver.openInputStream(n.uri)) {
                         String[] names = a.getNames(is);
                         if (names != null) {
                             if (names.length == 1) {
@@ -421,8 +420,9 @@ public class TTFManager { // .ttf *.otf *.ttc
                 return new Typeface.Builder(Storage.getFile(tc.uri)).setTtcIndex(tc.index).build();
             } else if (s.equals(ContentResolver.SCHEME_CONTENT)) {
                 ContentResolver resolver = context.getContentResolver();
-                try {
-                    ParcelFileDescriptor fd = resolver.openFileDescriptor(tc.uri, "r");
+                try (ParcelFileDescriptor fd = resolver.openFileDescriptor(tc.uri, "r")) {
+                    if (fd == null)
+                        throw new IOException("Failed to open file descriptor for " + tc.uri);
                     if (tc.index == -1)
                         tf = new Typeface.Builder(fd.getFileDescriptor()).build();
                     else

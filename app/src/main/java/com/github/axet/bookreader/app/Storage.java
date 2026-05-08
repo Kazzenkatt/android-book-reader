@@ -27,7 +27,7 @@ import com.github.axet.androidlibrary.app.RarSAF;
 import com.github.axet.androidlibrary.net.HttpClient;
 import com.github.axet.androidlibrary.widgets.CacheImagesAdapter;
 import com.github.axet.androidlibrary.widgets.WebViewCustom;
-import com.github.axet.bookreader.R;
+import com.github.axet.bookreader2.R;
 import com.github.axet.bookreader.widgets.FBReaderView;
 import com.github.axet.wget.SpeedInfo;
 
@@ -671,7 +671,12 @@ public class Storage extends com.github.axet.androidlibrary.app.Storage {
                 path = getDocumentName(context, u);
             else
                 path = Storage.getDocumentChildPath(u);
-            Uri o = createFile(context, root, path);
+            Uri o;
+            try {
+                o = createFile(context, root, path);
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
             ContentResolver resolver = context.getContentResolver();
             ParcelFileDescriptor fd;
             try {

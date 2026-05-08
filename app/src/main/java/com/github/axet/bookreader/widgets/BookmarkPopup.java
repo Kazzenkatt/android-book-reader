@@ -3,8 +3,8 @@ package com.github.axet.bookreader.widgets;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
-import android.support.v4.graphics.ColorUtils;
-import android.support.v7.app.AlertDialog;
+import androidx.core.graphics.ColorUtils;
+import androidx.appcompat.app.AlertDialog;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,7 +16,7 @@ import android.widget.PopupWindow;
 
 import com.github.axet.androidlibrary.widgets.PopupWindowCompat;
 import com.github.axet.androidlibrary.widgets.ThemeUtils;
-import com.github.axet.bookreader.R;
+import com.github.axet.bookreader2.R;
 import com.github.axet.bookreader.app.Storage;
 
 import java.util.ArrayList;
@@ -82,14 +82,14 @@ public class BookmarkPopup { // bookmark click popup
         }
         w = new PopupWindow();
         ImageView trash = new ImageView(getContext());
-        trash.setImageResource(R.drawable.ic_close_black_24dp);
-        trash.setColorFilter(ThemeUtils.getThemeColor(getContext(), R.attr.colorAccent));
+        trash.setImageResource(com.github.axet.androidlibrary.R.drawable.ic_close_black_24dp);
+        trash.setColorFilter(ThemeUtils.getThemeColor(getContext(), androidx.appcompat.R.attr.colorAccent));
         trash.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                 builder.setTitle(R.string.delete_bookmark);
-                builder.setMessage(R.string.are_you_sure);
+                builder.setMessage(com.github.axet.androidlibrary.R.string.are_you_sure);
                 builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

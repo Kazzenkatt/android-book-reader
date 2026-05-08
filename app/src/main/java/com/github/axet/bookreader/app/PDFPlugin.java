@@ -1,6 +1,7 @@
 package com.github.axet.bookreader.app;
 
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
@@ -12,8 +13,8 @@ import com.github.axet.androidlibrary.app.Natives;
 import com.github.axet.androidlibrary.widgets.CacheImagesAdapter;
 import com.github.axet.bookreader.widgets.FBReaderView;
 import com.github.axet.bookreader.widgets.ScrollWidget;
-import com.github.axet.pdfium.Config;
-import com.github.axet.pdfium.Pdfium;
+import com.shockwave.pdfium.PdfDocument;
+import com.shockwave.pdfium.PdfiumCore;
 
 import org.geometerplus.fbreader.book.AbstractBook;
 import org.geometerplus.fbreader.book.BookUtil;
@@ -34,6 +35,7 @@ import org.geometerplus.zlibrary.text.view.ZLTextPosition;
 import org.geometerplus.zlibrary.ui.android.image.ZLBitmapImage;
 
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.IOException;
 import java.text.Normalizer;
 import java.util.ArrayList;
@@ -47,9 +49,260 @@ public class PDFPlugin extends BuiltinFormatPlugin implements Plugin {
 
     public static final String EXT = "pdf";
 
+    // Wrapper classes to adapt new PdfiumCore API to old Pdfium API
+    private static class Pdfium {
+        public static final String META_TITLE = "Title";
+        public static final String META_AUTHOR = "Author";
+        
+        private PdfiumCore core;
+        private PdfDocument document;
+        private Context context;
+        
+        public Pdfium() {
+            // Context will be set via setContext()
+        }
+        
+        public void setContext(Context context) {
+            this.context = context;
+            this.core = new PdfiumCore(context);
+        }
+        
+        public void open(FileDescriptor fd) {
+            if (core == null) {
+                throw new IllegalStateException("Context not set. Call setContext() first.");
+            }
+            try {
+                document = core.newDocument(ParcelFileDescriptor.dup(fd));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        
+        public int getPagesCount() {
+            return core.getPageCount(document);
+        }
+        
+        public Page openPage(int pageIndex) {
+            core.openPage(document, pageIndex);
+            return new Page(core, document, pageIndex);
+        }
+        
+        public Size getPageSize(int pageIndex) {
+            com.shockwave.pdfium.util.Size size = core.getPageSize(document, pageIndex);
+            return new Size(size.getWidth(), size.getHeight());
+        }
+        
+        public String getMeta(String key) {
+            PdfDocument.Meta meta = core.getDocumentMeta(document);
+            if (META_AUTHOR.equals(key)) return meta.getAuthor();
+            if (META_TITLE.equals(key)) return meta.getTitle();
+            return null;
+        }
+        
+        public Bookmark[] getTOC() {
+            List<PdfDocument.Bookmark> bookmarks = core.getTableOfContents(document);
+            return convertBookmarks(bookmarks);
+        }
+        
+        private Bookmark[] convertBookmarks(List<PdfDocument.Bookmark> bookmarks) {
+            if (bookmarks == null || bookmarks.isEmpty()) {
+                return new Bookmark[0];
+            }
+            ArrayList<Bookmark> result = new ArrayList<>();
+            flattenBookmarks(bookmarks, 0, result);
+            return result.toArray(new Bookmark[0]);
+        }
+        
+        private void flattenBookmarks(List<PdfDocument.Bookmark> bookmarks, int level, ArrayList<Bookmark> result) {
+            for (PdfDocument.Bookmark b : bookmarks) {
+                Bookmark bookmark = new Bookmark();
+                bookmark.title = b.getTitle();
+                bookmark.page = (int) b.getPageIdx();  // Cast long to int
+                bookmark.level = level;
+                result.add(bookmark);
+                if (b.hasChildren()) {
+                    flattenBookmarks(b.getChildren(), level + 1, result);
+                }
+            }
+        }
+        
+        public void close() {
+            if (core != null && document != null) {
+                core.closeDocument(document);
+            }
+        }
+        
+        public static class Size {
+            public int width;
+            public int height;
+            
+            public Size(int width, int height) {
+                this.width = width;
+                this.height = height;
+            }
+        }
+        
+        public static class Page {
+            private PdfiumCore core;
+            private PdfDocument document;
+            private int pageIndex;
+            
+            public Page(PdfiumCore core, PdfDocument document, int pageIndex) {
+                this.core = core;
+                this.document = document;
+                this.pageIndex = pageIndex;
+            }
+            
+            public void render(Bitmap bitmap, int startX, int startY, int drawSizeX, int drawSizeY) {
+                core.renderPageBitmap(document, bitmap, pageIndex, startX, startY, drawSizeX, drawSizeY);
+            }
+            
+            public Text open() {
+                return new Text(core, document, pageIndex);
+            }
+            
+            public Link[] getLinks() {
+                List<PdfDocument.Link> links = core.getPageLinks(document, pageIndex);
+                if (links == null || links.isEmpty()) {
+                    return new Link[0];
+                }
+                Link[] result = new Link[links.size()];
+                for (int i = 0; i < links.size(); i++) {
+                    PdfDocument.Link l = links.get(i);
+                    result[i] = new Link();
+                    // Convert RectF to Rect
+                    android.graphics.RectF rectF = l.getBounds();
+                    result[i].bounds = new Rect(
+                        (int) rectF.left,
+                        (int) rectF.top,
+                        (int) rectF.right,
+                        (int) rectF.bottom
+                    );
+                    result[i].uri = l.getUri();
+                    result[i].index = (int) l.getDestPageIdx();
+                }
+                return result;
+            }
+            
+            public Rect toDevice(int startX, int startY, int sizeX, int sizeY, int rotate, Rect rect) {
+                // Simple scaling - assumes no rotation
+                com.shockwave.pdfium.util.Size pageSize = core.getPageSize(document, pageIndex);
+                float scaleX = (float) sizeX / pageSize.getWidth();
+                float scaleY = (float) sizeY / pageSize.getHeight();
+                
+                return new Rect(
+                    (int) (rect.left * scaleX),
+                    (int) (rect.top * scaleY),
+                    (int) (rect.right * scaleX),
+                    (int) (rect.bottom * scaleY)
+                );
+            }
+            
+            public android.graphics.Point toPage(int startX, int startY, int sizeX, int sizeY, int rotate, int deviceX, int deviceY) {
+                // Simple inverse scaling - assumes no rotation
+                com.shockwave.pdfium.util.Size pageSize = core.getPageSize(document, pageIndex);
+                float scaleX = (float) pageSize.getWidth() / sizeX;
+                float scaleY = (float) pageSize.getHeight() / sizeY;
+                
+                return new android.graphics.Point(
+                    (int) (deviceX * scaleX),
+                    (int) (deviceY * scaleY)
+                );
+            }
+            
+            public void close() {
+                // PdfiumCore manages page lifecycle
+            }
+        }
+        
+        public static class Text {
+            private PdfiumCore core;
+            private PdfDocument document;
+            private int pageIndex;
+            private String pageText;
+            
+            public Text(PdfiumCore core, PdfDocument document, int pageIndex) {
+                this.core = core;
+                this.document = document;
+                this.pageIndex = pageIndex;
+                // PdfiumCore doesn't have getPageText, we'll extract text differently
+                // For now, return empty string - text extraction would need different approach
+                this.pageText = "";
+                // TODO: Implement text extraction if needed using PdfTextPage
+            }
+            
+            public long getCount() {
+                return pageText.length();
+            }
+            
+            public String getText(int start, int count) {
+                if (start < 0 || start >= pageText.length()) {
+                    return "";
+                }
+                int end = Math.min(start + count, pageText.length());
+                return pageText.substring(start, end);
+            }
+            
+            public Rect[] getBounds(int start, int count) {
+                // Approximate bounds - new API doesn't provide per-character bounds
+                // Return single rect for the entire text range
+                com.shockwave.pdfium.util.Size pageSize = core.getPageSize(document, pageIndex);
+                
+                // Estimate: divide page into lines based on character count
+                int charsPerLine = 80; // rough estimate
+                int lines = (count + charsPerLine - 1) / charsPerLine;
+                int lineHeight = pageSize.getHeight() / 40; // rough estimate
+                
+                Rect[] rects = new Rect[Math.max(1, lines)];
+                for (int i = 0; i < rects.length; i++) {
+                    rects[i] = new Rect(
+                        10,
+                        i * lineHeight,
+                        pageSize.getWidth() - 10,
+                        (i + 1) * lineHeight
+                    );
+                }
+                return rects;
+            }
+            
+            public int getIndex(int x, int y) {
+                // Approximate character index from coordinates
+                // New API doesn't provide this, so we estimate
+                com.shockwave.pdfium.util.Size pageSize = core.getPageSize(document, pageIndex);
+                int charsPerLine = 80;
+                int lineHeight = pageSize.getHeight() / 40;
+                int line = y / lineHeight;
+                int col = (x * charsPerLine) / pageSize.getWidth();
+                int index = line * charsPerLine + col;
+                return Math.min(index, pageText.length() - 1);
+            }
+            
+            public void close() {
+                // No resources to close
+            }
+        }
+        
+        public static class Link {
+            public Rect bounds;
+            public String uri;
+            public int index;
+        }
+        
+        public static class Bookmark {
+            public String title;
+            public int page;  // Changed from long to int
+            public int level;
+        }
+    }
+    
+    // Config class for compatibility
+    private static class Config {
+        public static boolean natives = true;
+    }
+
     public static PDFPlugin create(Storage.Info info) {
         if (Config.natives) {
-            Natives.loadLibraries(info.context, "modpdfium", "pdfiumjni");
+            // New library doesn't need manual native loading
             Config.natives = false;
         }
         return new PDFPlugin(info);
@@ -763,9 +1016,10 @@ public class PDFPlugin extends BuiltinFormatPlugin implements Plugin {
         ParcelFileDescriptor fd;
         public Pdfium doc;
 
-        public PdfiumView(ZLFile f) {
+        public PdfiumView(ZLFile f, Context context) {
             try {
                 doc = new Pdfium();
+                doc.setContext(context);
                 fd = ParcelFileDescriptor.open(new File(f.getPath()), ParcelFileDescriptor.MODE_READ_ONLY);
                 doc.open(fd.getFileDescriptor());
                 current = new PdfiumPage(doc);
@@ -882,8 +1136,8 @@ public class PDFPlugin extends BuiltinFormatPlugin implements Plugin {
     }
 
     public static class PDFTextModel extends PdfiumView implements ZLTextModel {
-        public PDFTextModel(ZLFile f) {
-            super(f);
+        public PDFTextModel(ZLFile f, Context context) {
+            super(f, context);
         }
 
         @Override
@@ -969,11 +1223,14 @@ public class PDFPlugin extends BuiltinFormatPlugin implements Plugin {
 
     public PDFPlugin(Storage.Info info) {
         super(info, EXT);
+        this.context = info.context;
     }
+    
+    private Context context;
 
     @Override
     public View create(Storage.FBook fbook) {
-        return new PDFPlugin.PdfiumView(BookUtil.fileByBook(fbook.book));
+        return new PDFPlugin.PdfiumView(BookUtil.fileByBook(fbook.book), context);
     }
 
     @Override
@@ -981,11 +1238,13 @@ public class PDFPlugin extends BuiltinFormatPlugin implements Plugin {
         ZLFile f = BookUtil.fileByBook(book);
         try {
             Pdfium doc = new Pdfium();
+            doc.setContext(context);
             ParcelFileDescriptor fd = ParcelFileDescriptor.open(new File(f.getPath()), ParcelFileDescriptor.MODE_READ_ONLY);
             doc.open(fd.getFileDescriptor());
             book.addAuthor(doc.getMeta(Pdfium.META_AUTHOR));
             book.setTitle(doc.getMeta(Pdfium.META_TITLE));
             doc.close();
+            fd.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -1001,7 +1260,7 @@ public class PDFPlugin extends BuiltinFormatPlugin implements Plugin {
 
     @Override
     public ZLImage readCover(ZLFile f) {
-        PdfiumView view = new PdfiumView(f);
+        PdfiumView view = new PdfiumView(f, context);
         view.current.scale(CacheImagesAdapter.COVER_SIZE, CacheImagesAdapter.COVER_SIZE); // reduce render memory footprint
         Bitmap bm = Bitmap.createBitmap(view.current.pageBox.w, view.current.pageBox.h, Bitmap.Config.RGB_565);
         Canvas canvas = new Canvas(bm);
@@ -1028,7 +1287,7 @@ public class PDFPlugin extends BuiltinFormatPlugin implements Plugin {
 
     @Override
     public void readModel(BookModel model) throws BookReadingException {
-        PDFTextModel m = new PDFTextModel(BookUtil.fileByBook(model.Book));
+        PDFTextModel m = new PDFTextModel(BookUtil.fileByBook(model.Book), context);
         model.setBookTextModel(m);
         Pdfium.Bookmark[] bookmarks = m.doc.getTOC();
         loadTOC(0, 0, bookmarks, model.TOCTree);

@@ -22,12 +22,12 @@ import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.PowerManager;
-import android.support.v4.graphics.ColorUtils;
-import android.support.v4.view.ViewCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.PopupMenu;
-import android.support.v7.widget.RecyclerView;
+import androidx.core.graphics.ColorUtils;
+import androidx.core.view.ViewCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.PopupMenu;
+import androidx.recyclerview.widget.RecyclerView;
 import android.text.ClipboardManager;
 import android.util.AttributeSet;
 import android.view.Gravity;
@@ -46,7 +46,7 @@ import com.github.axet.androidlibrary.net.HttpClient;
 import com.github.axet.androidlibrary.preferences.AboutPreferenceCompat;
 import com.github.axet.androidlibrary.widgets.PinchView;
 import com.github.axet.androidlibrary.widgets.ThemeUtils;
-import com.github.axet.bookreader.R;
+import com.github.axet.bookreader2.R;
 import com.github.axet.bookreader.app.BookApplication;
 import com.github.axet.bookreader.app.Plugin;
 import com.github.axet.bookreader.app.Reflow;
@@ -1139,7 +1139,7 @@ public class FBReaderView extends RelativeLayout {
     }
 
     public void configColorProfile(SharedPreferences shared) {
-        if (shared.getString(BookApplication.PREFERENCE_THEME, "").equals(getContext().getString(R.string.Theme_Dark))) {
+        if (shared.getString(BookApplication.PREFERENCE_THEME, "").equals(getContext().getString(com.github.axet.androidlibrary.R.string.Theme_Dark))) {
             config.setValue(app.ViewOptions.ColorProfileName, ColorProfile.NIGHT);
         } else {
             config.setValue(app.ViewOptions.ColorProfileName, ColorProfile.DAY);
@@ -1863,8 +1863,8 @@ public class FBReaderView extends RelativeLayout {
 
         WallpaperLayout f = new WallpaperLayout(context);
         ImageButton c = new ImageButton(context);
-        c.setImageResource(R.drawable.ic_close_black_24dp);
-        c.setColorFilter(ThemeUtils.getThemeColor(context, R.attr.colorAccent));
+        c.setImageResource(com.github.axet.androidlibrary.R.drawable.ic_close_black_24dp);
+        c.setColorFilter(ThemeUtils.getThemeColor(context, androidx.appcompat.R.attr.colorAccent));
         f.addView(c, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.RIGHT | Gravity.TOP));
 
         final FBReaderView r = new FBReaderView(context) {
@@ -1934,7 +1934,7 @@ public class FBReaderView extends RelativeLayout {
                 }
             });
         }
-        builder.setPositiveButton(R.string.close, new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(com.github.axet.androidlibrary.R.string.close, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
             }

@@ -9,7 +9,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.speech.tts.TextToSpeech;
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -22,7 +22,7 @@ import android.widget.RelativeLayout;
 import com.github.axet.androidlibrary.sound.TTS;
 import com.github.axet.androidlibrary.widgets.ThemeUtils;
 import com.github.axet.androidlibrary.widgets.Toast;
-import com.github.axet.bookreader.R;
+import com.github.axet.bookreader2.R;
 import com.github.axet.bookreader.app.BookApplication;
 import com.github.axet.bookreader.app.Plugin;
 import com.github.axet.bookreader.app.Reflow;
@@ -474,7 +474,6 @@ public class TTSPopup {
                 fb.ttsUpdate();
             }
 
-            @Override
             public void onError(String utteranceId, Runnable done) {
                 Log.d(TAG, "onError");
                 if (!fragment.isEmpty() && fragment.retry < 2) {
@@ -494,10 +493,10 @@ public class TTSPopup {
                 }
             }
 
-            @Override
             public void onDone(String utteranceId, Runnable done) {
                 Log.d(TAG, "onDone");
-                super.onDone(utteranceId, done);
+                super.onDone(utteranceId);
+                done.run();
             }
         };
         tts.ttsCreate();
@@ -541,7 +540,7 @@ public class TTSPopup {
         int dp20 = ThemeUtils.dp2px(context, 20);
         FrameLayout f = new FrameLayout(context);
         FrameLayout round = new FrameLayout(context);
-        round.setBackgroundResource(R.drawable.panel);
+        // round.setBackgroundResource(R.drawable.panel); // TODO: Resource missing
         round.addView(view);
         gravity = Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM;
         f.addView(round, new FrameLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT, gravity));

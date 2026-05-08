@@ -9,3 +9,18 @@
 .externalNativeBuild
 app/src/main/assets/*.jar
 app/src/main/assets/*.dex
+
+# IDE and tool settings
+.idea/
+.kiro/
+.settings/
+.project
+
+# Session/working docs
+SESSION_SUMMARY.md
+PROJECT_SUMMARY.md
+NATIVE_LIBRARIES_UPGRADE.md
+BUILD_FROM_WINDOWS.md
+WORKING_BASELINE.md
+UPGRADE_PHASE1_BASELINE.md
+UPGRADE_PHASE2_INTERMEDIATE.md
